@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IRIS 2K26 - Tournament Leaderboard</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            screens: {
+              'xs': '480px',
+            }
+          }
+        }
+      }
+    </script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      html { scroll-behavior: smooth; }
+
+      body {
+        font-family: 'Rajdhani', sans-serif;
+        background-color: #050505;
+        color: #ffffff;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+      }
+
+      .font-title { font-family: 'Orbitron', sans-serif; }
+      .font-mono { font-family: 'Share Tech Mono', monospace; }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar { width: 8px; }
+      ::-webkit-scrollbar-track { background: #000; }
+      ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: #ff7b00; }
+
+      /* Glassmorphism row effect */
+      .leaderboard-row {
+        background: linear-gradient(90deg, rgba(20,20,20,0.4) 0%, rgba(30,30,30,0.6) 50%, rgba(20,20,20,0.4) 100%);
+        transition: all 0.2s ease;
+      }
+      .leaderboard-row:hover {
+        background: linear-gradient(90deg, rgba(40,40,40,0.8) 0%, rgba(60,60,60,0.8) 50%, rgba(40,40,40,0.8) 100%);
+        box-shadow: inset 4px 0 0 #ff7b00;
+      }
+
+      /* Utilities & Glowing */
+      .text-glow-orange { text-shadow: 0 0 15px rgba(234, 88, 12, 0.8); }
+      .text-glow-cyan { text-shadow: 0 0 15px rgba(0, 255, 204, 0.8); }
+    </style>
+  </head>
+  <body class="selection:bg-[#ff7b00] selection:text-black">
+    <audio id="bg-music" loop preload="auto">
+      <source
+        src="https://dl.dropboxusercontent.com/scl/fi/ciicyzbjrs57somg2unma/Garena-Free-Fire-Winterlands-2018-Update-Theme-Song-OST-Sinister..-Fbq_2K060YA.mp3?rlkey=qdobu5npmllyx7zb4t8o4vddx&st=kpuls75q&dl=0"
+        type="audio/mpeg"
+      />
+    </audio>
+
+    <button
+      id="music-toggle"
+      style="-webkit-tap-highlight-color: transparent; outline: none;"
+      class="fixed bottom-12 sm:bottom-14 right-4 sm:right-6 z-50 px-5 py-3 rounded-full transition-all flex items-center justify-center gap-2 shadow-lg cursor-pointer select-none appearance-none bg-[#111] text-[#ff7b00] border border-[#ff7b00]/50 focus:outline-none"
+    >
+      <i
+        data-lucide="play"
+        id="icon-play"
+        class="w-4 h-4 pointer-events-none"
+      ></i>
+      <i
+        data-lucide="pause"
+        id="icon-pause"
+        class="w-4 h-4 hidden pointer-events-none"
+      ></i>
+      <span
+        id="music-text"
+        class="font-bold tracking-wider uppercase text-xs font-mono pointer-events-none"
+        >Play Theme</span
+      >
+    </button>
+
+    <canvas
+      id="snow-canvas"
+      class="fixed inset-0 w-full h-full pointer-events-none z-[100]"
+    ></canvas>
+
+    <nav
+      class="fixed top-0 left-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-white/10"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-20">
+          <div
+            class="flex-shrink-0 flex items-center gap-2 cursor-pointer"
+            onclick="window.scrollTo(0, 0)"
+          >
+            <i data-lucide="crosshair" class="text-[#ff7b00] w-8 h-8"></i>
+            <span
+              class="font-title text-2xl tracking-wider text-glow-orange text-white"
+            >
+              IRIS <span class="text-[#ff7b00]">2K26</span>
+            </span>
+          </div>
+
+          <div class="hidden md:block">
+            <div class="ml-10 flex items-baseline space-x-8">
+              <a
+                href="#home"
+                class="text-gray-300 hover:text-[#ff7b00] hover:text-glow-orange px-3 py-2 rounded-md text-sm font-bold uppercase tracking-wider transition-all"
+                >Home</a
+              >
+              <a
+                href="#leaderboard"
+                class="text-gray-300 hover:text-[#ff7b00] hover:text-glow-orange px-3 py-2 rounded-md text-sm font-bold uppercase tracking-wider transition-all"
+                >Leaderboard</a
+              >
+              <a
+                href="#schedule"
+                class="text-gray-300 hover:text-[#ff7b00] hover:text-glow-orange px-3 py-2 rounded-md text-sm font-bold uppercase tracking-wider transition-all"
+                >Schedule</a
+              >
+            </div>
+          </div>
+
+          <div class="md:hidden flex items-center">
+            <button
+              id="mobile-menu-btn"
+              class="text-gray-400 hover:text-white focus:outline-none p-2"
+            >
+              <i data-lucide="menu" id="menu-icon" class="h-8 w-8"></i>
+              <i data-lucide="x" id="close-icon" class="h-8 w-8 hidden"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="mobile-menu"
+        class="hidden md:hidden bg-black/95 backdrop-blur-xl border-b border-white/10 absolute w-full left-0 top-20"
+      >
+        <div class="px-2 pt-2 pb-6 space-y-1 sm:px-3 flex flex-col">
+          <a
+            href="#home"
+            class="mobile-link text-gray-300 hover:text-[#ff7b00] block px-3 py-4 rounded-md text-base font-bold uppercase tracking-wider text-center border-b border-white/5"
+            >Home</a
+          >
+          <a
+            href="#leaderboard"
+            class="mobile-link text-gray-300 hover:text-[#ff7b00] block px-3 py-4 rounded-md text-base font-bold uppercase tracking-wider text-center border-b border-white/5"
+            >Leaderboard</a
+          >
+          <a
+            href="#schedule"
+            class="mobile-link text-gray-300 hover:text-[#ff7b00] block px-3 py-4 rounded-md text-base font-bold uppercase tracking-wider text-center border-b border-white/5"
+            >Schedule</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <section
+      id="home"
+      class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-[#050505]"
+    >
+      <div
+        id="parallax-bg"
+        class="absolute inset-0 z-0 pointer-events-none scale-110 transition-transform duration-75 ease-out"
+        style="background-image: url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center;"
+      >
+        <div class="absolute inset-0 bg-black/40"></div>
+        <div
+          class="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/80 to-transparent"
+        ></div>
+        <div
+          class="absolute inset-0 opacity-[0.15]"
+          style="background-image: linear-gradient(rgba(0, 255, 204, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 204, 0.1) 1px, transparent 1px); background-size: 40px 40px;"
+        ></div>
+      </div>
+
+      <div
+        class="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center mt-10 md:mt-0"
+      >
+        <div
+          class="inline-block mb-4 px-4 py-1 border border-[#00ffcc]/30 bg-[#00ffcc]/10 rounded-full text-[#00ffcc] font-mono text-xs sm:text-sm md:text-base tracking-widest uppercase backdrop-blur-sm animate-pulse"
+        >
+          Grand Finals • Phase 2
+        </div>
+
+        <h1
+          class="font-title text-5xl sm:text-7xl md:text-8xl lg:text-9xl text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-500 tracking-tighter mb-2 leading-none w-full px-2"
+        >
+          BATTLE
+          <span
+            class="text-[#ff7b00] text-glow-orange block md:inline mt-2 md:mt-0"
+            >ARENA</span
+          >
+        </h1>
+
+        <p
+          class="font-mono text-gray-300 mt-4 md:mt-6 text-sm sm:text-base md:text-xl lg:text-2xl max-w-[90%] md:max-w-2xl mx-auto tracking-wide mb-8 md:mb-10 drop-shadow-md"
+        >
+          The ultimate clash of titans. 12 Teams. 5 Maps. 1 Champion. Welcome to
+          the IRIS 2K26 Championship.
+        </p>
+
+        <div
+          class="flex gap-3 sm:gap-6 mb-10 relative z-10 backdrop-blur-md bg-black/40 p-4 sm:px-8 sm:py-5 rounded-2xl border border-[#00ffcc]/20 shadow-[0_0_30px_rgba(0,255,204,0.1)]"
+        >
+          <div class="flex flex-col items-center">
+            <span
+              id="cd-days"
+              class="font-title text-3xl sm:text-5xl text-[#00ffcc] text-glow-cyan"
+              >00</span
+            >
+            <span
+              class="font-mono text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest mt-1"
+              >Days</span
+            >
+          </div>
+          <span class="font-title text-3xl sm:text-5xl text-gray-600">:</span>
+          <div class="flex flex-col items-center">
+            <span
+              id="cd-hours"
+              class="font-title text-3xl sm:text-5xl text-[#00ffcc] text-glow-cyan"
+              >00</span
+            >
+            <span
+              class="font-mono text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest mt-1"
+              >Hours</span
+            >
+          </div>
+          <span class="font-title text-3xl sm:text-5xl text-gray-600">:</span>
+          <div class="flex flex-col items-center">
+            <span
+              id="cd-mins"
+              class="font-title text-3xl sm:text-5xl text-[#00ffcc] text-glow-cyan"
+              >00</span
+            >
+            <span
+              class="font-mono text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest mt-1"
+              >Mins</span
+            >
+          </div>
+          <span class="font-title text-3xl sm:text-5xl text-gray-600">:</span>
+          <div class="flex flex-col items-center">
+            <span
+              id="cd-secs"
+              class="font-title text-3xl sm:text-5xl text-[#ff7b00] text-glow-orange"
+              >00</span
+            >
+            <span
+              class="font-mono text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest mt-1"
+              >Secs</span
+            >
+          </div>
+        </div>
+
+        <div
+          class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center w-full sm:w-auto px-4 sm:px-0"
+        >
+          <a
+            href="#leaderboard"
+            class="group relative px-6 py-4 sm:px-8 bg-transparent text-[#ff7b00] border-2 border-[#ff7b00] font-bold text-sm sm:text-lg uppercase tracking-widest overflow-hidden transition-all hover:text-black text-center"
+          >
+            <div
+              class="absolute inset-0 bg-[#ff7b00] transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out z-0"
+            ></div>
+            <span class="relative z-10 flex items-center justify-center gap-2"
+              >View Standings
+              <i data-lucide="chevron-right" class="w-4 h-4 sm:w-5 sm:h-5"></i
+            ></span>
+          </a>
+
+          <button
+            class="px-6 py-4 sm:px-8 bg-white/5 text-white border border-white/20 font-bold text-sm sm:text-lg uppercase tracking-widest backdrop-blur-sm hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+          >
+            <i
+              data-lucide="trophy"
+              class="w-4 h-4 sm:w-5 sm:h-5 text-[#00ffcc]"
+            ></i>
+            Prize Pool: Coming Soon
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce flex-col items-center text-gray-500 hidden md:flex z-10"
+      >
+        <span class="font-mono text-xs tracking-widest uppercase mb-2"
+          >Scroll</span
+        >
+        <div
+          class="w-[1px] h-12 bg-gradient-to-b from-[#ff7b00] to-transparent"
+        ></div>
+      </div>
+    </section>
+
+    <section
+      id="leaderboard"
+      class="relative py-20 px-4 sm:px-6 lg:px-8 bg-[#050505] transition-transform duration-75 ease-out"
+    >
+      <div
+        class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none"
+      >
+        <div
+          class="absolute top-1/4 left-0 w-96 h-96 bg-[#ff7b00] opacity-[0.03] blur-[100px] rounded-full"
+        ></div>
+        <div
+          class="absolute bottom-1/4 right-0 w-96 h-96 bg-[#00ffcc] opacity-[0.03] blur-[100px] rounded-full"
+        ></div>
+      </div>
+
+      <div
+        class="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center"
+      >
+        <div class="text-center mb-12">
+          <h2
+            class="font-title text-4xl md:text-5xl text-[#ff9900] tracking-wider mb-2 text-glow-orange uppercase"
+          >
+            Tournament Leaderboard
+          </h2>
+          <div
+            class="flex items-center justify-center gap-2 mt-4 font-mono text-white/90"
+          >
+            <div
+              class="w-3 h-3 rounded-full bg-[#00ffcc] animate-pulse shadow-[0_0_10px_#00ffcc]"
+            ></div>
+            <span class="font-bold tracking-widest text-base"
+              >LIVE - <span id="live-timer"></span
+            ></span>
+          </div>
+        </div>
+
+        <div
+          id="mvp-container"
+          class="w-full mb-8 transition-all duration-500 hidden"
+        ></div>
+
+        <div
+          id="tabs-container"
+          class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8 w-full"
+        ></div>
+
+        <div
+          class="w-full bg-[#0a0a0a] rounded-xl border border-white/10 overflow-hidden shadow-2xl relative min-h-[300px]"
+        >
+          <div
+            class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#ff7b00]/50 to-transparent"
+          ></div>
+
+          <div
+            class="flex items-center px-4 md:px-6 py-4 bg-[#111] border-b border-white/10 text-[#ff7b00] font-bold tracking-widest text-xs sm:text-sm uppercase relative z-10 shadow-md"
+          >
+            <div class="w-12 sm:w-16 text-center">RANK</div>
+            <div class="flex-1 ml-2">TEAM</div>
+            <div class="w-16 sm:w-24 text-center text-glow-orange text-white">
+              TOTAL
+            </div>
+          </div>
+
+          <div id="leaderboard-body" class="flex flex-col">
+            <div
+              class="py-20 text-center font-mono text-[#00ffcc] animate-pulse"
+            >
+              SYNCING DATA...
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section
+      id="schedule"
+      class="py-20 px-4 sm:px-6 lg:px-8 bg-[#020202] border-t border-white/5 relative overflow-hidden"
+    >
+      <div
+        class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full h-[500px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#00ffcc]/5 via-transparent to-transparent pointer-events-none"
+      ></div>
+
+      <div class="max-w-6xl mx-auto relative z-10">
+        <div
+          class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6"
+        >
+          <div>
+            <h2
+              class="font-title text-4xl md:text-5xl text-white tracking-wider mb-2 uppercase"
+            >
+              Match <span class="text-[#00ffcc]">Schedule</span>
+            </h2>
+            <p
+              class="font-mono text-gray-400 tracking-widest uppercase text-sm"
+            >
+              Day 1 • BATTLE ROYALE
+            </p>
+          </div>
+          <button
+            class="flex items-center gap-2 bg-[#111] hover:bg-[#222] text-white px-6 py-3 border border-white/10 rounded-sm font-bold uppercase tracking-wider transition-colors w-max"
+          >
+            <i data-lucide="calendar" class="w-5 h-5 text-[#00ffcc]"></i> Add to
+            Calendar
+          </button>
+        </div>
+
+        <div
+          id="schedule-container"
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          <div
+            class="col-span-full py-10 text-center font-mono text-[#00ffcc] animate-pulse"
+          >
+            LOADING SCHEDULE...
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer
+      class="bg-black border-t border-white/10 pt-16 pb-20 sm:pb-16 px-4 sm:px-6 lg:px-8"
+    >
+      <div
+        class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start gap-10"
+      >
+        <div class="flex flex-col items-center md:items-start">
+          <div class="flex items-center gap-2 mb-4">
+            <i data-lucide="crosshair" class="text-[#ff7b00] w-8 h-8"></i>
+            <span class="font-title text-2xl tracking-wider text-white">
+              IRIS <span class="text-[#ff7b00]">2K26</span>
+            </span>
+          </div>
+          <p
+            class="text-gray-500 font-mono text-sm max-w-xs text-center md:text-left"
+          >
+            The premier Battle Royale esports tournament. Experience the highest
+            tier of competitive gaming.
+          </p>
+        </div>
+
+        <div class="flex gap-16 text-center md:text-left">
+          <div>
+            <h4
+              class="text-white font-title text-lg mb-4 uppercase tracking-wider"
+            >
+              Tournament
+            </h4>
+            <ul class="space-y-2 text-gray-400 font-mono text-sm">
+              <li>
+                <a
+                  href="https://drive.google.com/file/d/1FloVaD3KaamJ5s56i-wZnJA47PC2jol-/view?usp=drivesdk"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="hover:text-[#ff7b00] transition-colors"
+                  >Rules & Format</a
+                >
+              </li>
+              <li>
+                <a
+                  href="PASTE_TEAMS_LINK_HERE"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="hover:text-[#ff7b00] transition-colors"
+                  >Participating Teams</a
+                >
+              </li>
+              <li>
+                <a
+                  href="PASTE_PRIZE_LINK_HERE"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="hover:text-[#ff7b00] transition-colors"
+                  >Prize Distribution</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4
+              class="text-white font-title text-lg mb-4 uppercase tracking-wider"
+            >
+              Socials
+            </h4>
+            <div class="flex">
+              <a
+                href="https://chat.whatsapp.com/F55DYIoqjGCHSRN0CP3s4R?mode=gi_t"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="group flex items-center gap-3 px-5 py-3 bg-[#111] border border-white/10 rounded-full text-gray-400 hover:text-white hover:border-[#25D366] hover:bg-[#25D366]/10 transition-all shadow-lg hover:shadow-[0_0_15px_rgba(37,211,102,0.4)]"
+              >
+                <svg
+                  class="w-6 h-6 text-[#25D366] group-hover:text-white transition-colors"
+                  fill="currentColor"
+                  viewBox="0 0 448 512"
+                >
+                  <path
+                    d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157.1zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"
+                  />
+                </svg>
+                <span class="font-bold tracking-wider uppercase text-sm"
+                  >Join WhatsApp Group</span
+                >
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="max-w-7xl mx-auto mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4"
+      >
+        <p class="text-gray-600 font-mono text-xs">
+          &copy; 2026 VADMED IRIS Esports. All rights reserved. Not affiliated
+          with Garena.
+        </p>
+        <div class="flex gap-4 text-gray-600 font-mono text-xs">
+          <a
+            href="https://drive.google.com/file/d/100es-KZA3BCSWrMgsEkggD_PBOlg9uRh/view?usp=drivesdk"
+            class="hover:text-gray-300"
+            >Privacy Policy</a
+          >
+          <a
+            href="https://drive.google.com/file/d/1zy0DNCyNzeZNYxOfoBxmM3Fsk5SYdelh/view?usp=drivesdk"
+            class="hover:text-gray-300"
+            >Terms of Service</a
+          >
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      // Initialize Lucide Icons
+      lucide.createIcons();
+
+      // ==========================================
+      // 📊 SPREADSHEET CONFIGURATION
+      // ==========================================
+      const MATCH_URLS = {
+        'Match 1': "https://docs.google.com/spreadsheets/d/e/2PACX-1vSsiqcYXYmtB8nLGXVP-Fkwr6DVZOehzH83ax_-U8agRM4lG-JH_oSSQClT0ENVCQgdx1LuklCjpRt7/pub?gid=322356309&single=true&output=csv",
+        'Match 2': "https://docs.google.com/spreadsheets/d/e/2PACX-1vTDM5jG21Fap58WFf0hT1C7i0mZWZhl4bmNpwddHB3DS3nqTpZHi-XPDWosUmLuKmHjTn0UHGnDWQzp/pub?gid=322356309&single=true&output=csv",
+        'Match 3': "https://docs.google.com/spreadsheets/d/e/2PACX-1vRVbhVzK4frwdv40vAZfLdlRHHm5e96Z089RWRdb7ttPSPnMwn2uaa8FMvDbv7asgDEUcYweyGZHnQt/pub?gid=322356309&single=true&output=csv",
+        'Match 4': "https://docs.google.com/spreadsheets/d/e/2PACX-1vRhV9tU3IG6uELYVyCL4mC6GIwrhz-jy8Z-JFY2ovdpDssVynKQfo4BJpkkT9kqmaycntXYeAjnr2EL/pub?gid=322356309&single=true&output=csv",
+        'Match 5': "https://docs.google.com/spreadsheets/d/e/2PACX-1vRWZTheaWUlfQClW3-Fol1_5ki7TvUABMCiUQOp1_naPBR3W84wAhFAX8FY-25RSucDb93hoxR9pN7U/pub?gid=322356309&single=true&output=csv"
+      };
+
+      const SCHEDULE_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS4yAOi5TTumkZ3MaGlYbxu0xg7CldZTMakWTLncAO7CzgF0I0K3nnH3f4jk5OREAYwRpZ__mICnTJ7/pub?gid=322356309&single=true&output=csv";
+
+      // App State
+      let activeTab = 'Overall';
+      const tabs = ['Overall', 'Match 1', 'Match 2', 'Match 3', 'Match 4', 'Match 5'];
+      let leaderboardData = {
+        'Overall': [], 'Match 1': [], 'Match 2': [], 'Match 3': [], 'Match 4': [], 'Match 5': []
+      };
+
+      // DOM Elements
+      const tabsContainer = document.getElementById('tabs-container');
+      const leaderboardBody = document.getElementById('leaderboard-body');
+      const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+      const mobileMenu = document.getElementById('mobile-menu');
+      const menuIcon = document.getElementById('menu-icon');
+      const closeIcon = document.getElementById('close-icon');
+      const mobileLinks = document.querySelectorAll('.mobile-link');
+      const liveTimer = document.getElementById('live-timer');
+
+      // Mobile Menu Toggle
+      let isMenuOpen = false;
+      function toggleMenu() {
+        isMenuOpen = !isMenuOpen;
+        if (isMenuOpen) {
+          mobileMenu.classList.remove('hidden');
+          menuIcon.classList.add('hidden');
+          closeIcon.classList.remove('hidden');
+        } else {
+          mobileMenu.classList.add('hidden');
+          menuIcon.classList.remove('hidden');
+          closeIcon.classList.add('hidden');
+        }
+      }
+      mobileMenuBtn.addEventListener('click', toggleMenu);
+      mobileLinks.forEach(link => link.addEventListener('click', () => { if(isMenuOpen) toggleMenu(); }));
+
+      // Live Timer
+      setInterval(() => {
+        const now = new Date();
+        liveTimer.innerText = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }, 1000);
+
+      // ==========================================
+      // ⏳ DOOMSDAY COUNTDOWN TIMER (Set to May 8, 2026)
+      // ==========================================
+      const countDownDate = new Date("May 8, 2026 12:00:00").getTime();
+
+      const timerInterval = setInterval(function() {
+        const now = new Date().getTime();
+        const distance = countDownDate - now;
+
+        if (distance < 0) {
+          clearInterval(timerInterval);
+          return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        document.getElementById("cd-days").innerText = days.toString().padStart(2, '0');
+        document.getElementById("cd-hours").innerText = hours.toString().padStart(2, '0');
+        document.getElementById("cd-mins").innerText = minutes.toString().padStart(2, '0');
+        document.getElementById("cd-secs").innerText = seconds.toString().padStart(2, '0');
+      }, 1000);
+
+      // Fetch and Process Leaderboard Data
+      async function fetchAndProcessData() {
+        const groupedData = {
+          'Match 1': [], 'Match 2': [], 'Match 3': [], 'Match 4': [], 'Match 5': []
+        };
+        const overallMap = {};
+        let hasAnyLinks = false;
+
+        for (const [matchName, url] of Object.entries(MATCH_URLS)) {
+          if (!url || !url.trim()) continue;
+          hasAnyLinks = true;
+
+          try {
+            const response = await fetch(url);
+            const csvText = await response.text();
+
+            const lines = csvText.split('\n').filter(line => line.trim() !== '');
+            if (lines.length < 2) continue;
+
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+            for (let i = 1; i < lines.length; i++) {
+              const values = lines[i].split(',').map(v => v.trim());
+              const row = {};
+              headers.forEach((header, index) => {
+                row[header] = values[index];
+              });
+
+              const teamName = row.team || "Unknown";
+
+              let generatedLogo = "";
+              const words = teamName.trim().split(/\s+/);
+              if (words.length >= 2) {
+                generatedLogo = (words[0][0] + words[1][0]).toUpperCase();
+              } else {
+                generatedLogo = teamName.substring(0, 2).toUpperCase();
+              }
+              const logo = row.logo ? row.logo.substring(0, 2).toUpperCase() : generatedLogo;
+
+              const pp = parseInt(row.pp) || 0;
+              const kp = parseInt(row.kp) || 0;
+              const total = parseInt(row.total) || (pp + kp);
+
+              const teamMatchData = { team: teamName, logo, pp, kp, total };
+              groupedData[matchName].push(teamMatchData);
+
+              if (!overallMap[teamName]) {
+                overallMap[teamName] = { team: teamName, logo, pp: 0, kp: 0, total: 0 };
+              }
+              overallMap[teamName].pp += pp;
+              overallMap[teamName].kp += kp;
+              overallMap[teamName].total += total;
+            }
+          } catch (error) {
+            console.error(`Error fetching CSV for ${matchName}:`, error);
+          }
+        }
+
+        if (!hasAnyLinks) {
+          leaderboardBody.innerHTML = `
+            <div class="py-20 text-center font-mono text-gray-500 flex flex-col items-center">
+              <span>⚠ NO CSV LINKS CONFIGURED</span>
+              <span class='text-xs mt-2'>Please add your Google Sheets links in the HTML code</span>
+            </div>`;
+          return;
+        }
+
+        Object.keys(groupedData).forEach(match => {
+          groupedData[match].sort((a, b) => b.total - a.total);
+          groupedData[match].forEach((team, index) => {
+            team.rank = index + 1;
+          });
+        });
+
+        const overallArray = Object.values(overallMap).sort((a, b) => b.total - a.total);
+        overallArray.forEach((team, index) => {
+          team.rank = index + 1;
+        });
+
+        groupedData['Overall'] = overallArray;
+        leaderboardData = groupedData;
+
+        renderLeaderboard();
+      }
+
+      // Fetch and Process Schedule
+      async function fetchAndRenderSchedule() {
+        const scheduleContainer = document.getElementById('schedule-container');
+        if (!SCHEDULE_CSV_URL) {
+          scheduleContainer.innerHTML = `<div class="col-span-full py-10 text-center font-mono text-gray-500">⚠ SCHEDULE CSV URL NOT CONFIGURED</div>`;
+          return;
+        }
+
+        try {
+          const response = await fetch(SCHEDULE_CSV_URL);
+          const csvText = await response.text();
+          const lines = csvText.split('\n').filter(line => line.trim() !== '');
+          if (lines.length < 2) return;
+
+          const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+          let html = '';
+
+          for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',').map(v => v.trim());
+            const row = {};
+            headers.forEach((header, index) => { row[header] = values[index]; });
+
+            const matchName = row.match || `Match ${i}`;
+            const mapName = row.map || "TBD";
+            const time = row.time || "TBD";
+            const status = (row.status || "Upcoming").trim();
+
+            let topBar = 'bg-[#ff7b00]';
+            let badgeStyle = 'bg-[#ff7b00]/10 text-[#ff7b00] border-[#ff7b00]/30';
+
+            if (status.toLowerCase() === 'live') {
+              topBar = 'bg-[#00ffcc] shadow-[0_0_10px_#00ffcc]';
+              badgeStyle = 'bg-[#00ffcc]/10 text-[#00ffcc] border-[#00ffcc]/30 animate-pulse';
+            } else if (status.toLowerCase() === 'completed') {
+              topBar = 'bg-gray-600';
+              badgeStyle = 'bg-white/5 text-gray-500 border-white/10';
+            }
+
+            html += `
+              <div class="bg-[#0a0a0a] border border-white/10 p-6 rounded-lg hover:border-[#00ffcc]/50 transition-colors group relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 ${topBar}"></div>
+                <div class="flex justify-between items-start mb-6 pt-2">
+                  <div>
+                    <h3 class="font-title text-xl text-white mb-1 uppercase group-hover:text-[#00ffcc] transition-colors">${matchName}</h3>
+                    <p class="font-mono text-gray-400 text-sm tracking-widest">${mapName}</p>
+                  </div>
+                  <div class="px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider border ${badgeStyle}">${status}</div>
+                </div>
+                <div class="flex items-center justify-between border-t border-white/5 pt-4">
+                  <span class="font-mono text-lg text-white font-bold">${time}</span>
+                </div>
+              </div>
+            `;
+          }
+          scheduleContainer.innerHTML = html;
+        } catch (error) {
+          console.error("Error fetching schedule:", error);
+        }
+      }
+
+      // Render Tabs
+      function renderTabs() {
+        tabsContainer.innerHTML = '';
+        tabs.forEach(tab => {
+          const btn = document.createElement('button');
+          btn.innerText = tab;
+
+          const baseClasses = "px-5 py-2.5 rounded-lg font-bold text-sm md:text-base tracking-wider transition-all duration-300 backdrop-blur-md border uppercase".split(" ");
+          btn.classList.add(...baseClasses);
+
+          if (activeTab === tab) {
+            btn.classList.add('bg-[#ff7b00]', 'text-black', 'shadow-[0_0_20px_rgba(255,123,0,0.4)]', 'border-[#ff7b00]');
+          } else {
+            btn.classList.add('bg-[#111]', 'text-gray-400', 'border-white/10', 'hover:bg-[#222]', 'hover:text-white');
+          }
+
+          btn.addEventListener('click', () => {
+            if (navigator.vibrate) navigator.vibrate(15); // Haptic feedback on tab change
+            activeTab = tab;
+            renderTabs();
+            renderLeaderboard();
+          });
+
+          tabsContainer.appendChild(btn);
+        });
+      }
+
+      // ==========================================
+      // 🔥 DYNAMIC FIRE & AURA EFFECTS
+      // ==========================================
+      const fireStyles = document.createElement('style');
+      fireStyles.innerHTML = `
+        @keyframes floatUpAndFade {
+          0% { transform: translateY(10px) scale(1); opacity: 1; }
+          100% { transform: translateY(-30px) scale(0.3); opacity: 0; }
+        }
+        .fire-ember {
+          position: absolute;
+          bottom: -5px;
+          border-radius: 50%;
+          animation: floatUpAndFade linear infinite;
+          pointer-events: none;
+          filter: blur(2px);
+          mix-blend-mode: screen;
+          z-index: 0;
+        }
+      `;
+      document.head.appendChild(fireStyles);
+
+      function igniteElement(row, rank) {
+        if (!row) return;
+
+        row.style.position = 'relative';
+
+        Array.from(row.children).forEach(child => {
+          child.style.position = 'relative';
+          child.style.zIndex = '10';
+        });
+
+        // 🔥 SUPREME KING DETECTION LOGIC 🔥
+        const isSupremeKing = (activeTab === 'Overall' && rank === 1);
+
+        const particleCount = isSupremeKing ? 80 : rank === 1 ? 50 : rank === 2 ? 25 : 10;
+
+        const colors = isSupremeKing ? ['#8b00ff', '#ff00ff', '#2a0040', '#000000'] :
+                       rank === 1 ? ['#ffffff', '#ffea00', '#ff7b00'] :
+                       rank === 2 ? ['#ffea00', '#ff7b00', '#ff2a00'] :
+                                    ['#ff7b00', '#ff2a00', '#cc0000'];
+
+        for (let i = 0; i < particleCount; i++) {
+          const ember = document.createElement('div');
+          ember.className = 'fire-ember';
+
+          const size = Math.random() * 6 + 3;
+          const left = Math.random() * 100;
+          const duration = Math.random() * 1.5 + 0.5;
+          const delay = Math.random() * 2;
+          const color = colors[Math.floor(Math.random() * colors.length)];
+
+          ember.style.width = `${size}px`;
+          ember.style.height = `${size}px`;
+          ember.style.left = `${left}%`;
+          ember.style.background = color;
+          ember.style.boxShadow = `0 0 ${size * 2}px ${color}`;
+          ember.style.animationDuration = `${duration}s`;
+          ember.style.animationDelay = `-${delay}s`;
+
+          row.appendChild(ember);
+        }
+
+        const glowOpacity = isSupremeKing ? 0.4 : rank === 1 ? 0.3 : rank === 2 ? 0.15 : 0.05;
+        const glowColor = isSupremeKing ? '139, 0, 255' : '255, 123, 0';
+        const glow = document.createElement('div');
+        glow.className = 'absolute inset-0 z-0 pointer-events-none';
+        glow.style.background = `linear-gradient(to top, rgba(${glowColor}, ${glowOpacity}), transparent)`;
+        row.appendChild(glow);
+
+        // 👑 SUPREME KING EXCLUSIVE EFFECTS
+        if (isSupremeKing) {
+          const teamNameEl = row.querySelector('.truncate');
+          if (teamNameEl) {
+             teamNameEl.classList.remove('text-gray-100');
+             teamNameEl.classList.add('text-white');
+             teamNameEl.style.textShadow = '2px 0 #00ffcc, -2px 0 #ff00ff';
+             teamNameEl.animate([
+               { transform: 'translate(0)' },
+               { transform: 'translate(-2px, 1px)' },
+               { transform: 'translate(-1px, -1px)' },
+               { transform: 'translate(2px, 1px)' },
+               { transform: 'translate(1px, -1px)' },
+               { transform: 'translate(0)' }
+             ], { duration: 300, iterations: Infinity, direction: 'alternate', easing: 'cubic-bezier(.25, .46, .45, .94)' });
+          }
+
+          const booyahStamp = document.createElement('div');
+          booyahStamp.className = 'absolute inset-0 flex items-center justify-center opacity-[0.07] pointer-events-none z-0 overflow-hidden mix-blend-screen';
+          booyahStamp.innerHTML = '<span class="font-title text-5xl sm:text-7xl text-[#ff00ff] -rotate-6 tracking-tighter whitespace-nowrap font-black">BOOYAH!</span>';
+          row.appendChild(booyahStamp);
+
+          for (let j = 0; j < 4; j++) {
+              const bolt = document.createElement('div');
+              bolt.className = 'absolute top-0 bottom-0 pointer-events-none mix-blend-overlay z-10';
+              bolt.style.width = `${Math.random() * 3 + 1}px`;
+              bolt.style.left = `${Math.random() * 100}%`;
+              bolt.style.background = j % 2 === 0 ? '#000000' : '#ffffff';
+
+              bolt.animate([
+                { opacity: 0 }, { opacity: 0, offset: 0.9 },
+                { opacity: 1, filter: 'drop-shadow(0 0 10px white)', offset: 0.92 },
+                { opacity: 0, offset: 0.94 },
+                { opacity: 1, offset: 0.96 },
+                { opacity: 0 }
+              ], { duration: Math.random() * 3000 + 2000, iterations: Infinity });
+
+              row.appendChild(bolt);
+          }
+        }
+      }
+
+      // ==========================================
+      // 🌀 DOMAIN EXPANSION & HAPTICS (ON ROW CLICK)
+      // ==========================================
+      function toggleDomainExpansion(rowElement) {
+        // 📱 KILLSHOT HAPTICS
+        if (navigator.vibrate) navigator.vibrate(20);
+
+        const expansion = rowElement.querySelector('.domain-expansion');
+
+        // Close all other rows
+        document.querySelectorAll('.domain-expansion').forEach(el => {
+          if (el !== expansion) el.style.maxHeight = '0px';
+        });
+
+        // Toggle current row
+        if (expansion.style.maxHeight === '0px' || !expansion.style.maxHeight) {
+          expansion.style.maxHeight = expansion.scrollHeight + 'px';
+          lucide.createIcons({ root: expansion });
+        } else {
+          expansion.style.maxHeight = '0px';
+        }
+      }
+
+      // ==========================================
+      // 🏆 RENDER LEADERBOARD & MVP
+      // ==========================================
+      function renderLeaderboard() {
+        const currentData = leaderboardData[activeTab] || [];
+        const mvpContainer = document.getElementById('mvp-container');
+
+        if (currentData.length === 0) {
+          leaderboardBody.innerHTML = `
+            <div class="py-20 text-center font-mono text-gray-500 flex flex-col items-center">
+              <span>NO DATA AVAILABLE FOR THIS TAB</span>
+              <span class='text-xs mt-2'>Make sure you added the CSV link for ${activeTab}</span>
+            </div>`;
+          if (mvpContainer) mvpContainer.classList.add('hidden');
+          return;
+        }
+
+        // 🔥 MVP TOP FRAGGER LOGIC
+        if (mvpContainer) {
+          const mvp = currentData.reduce((prev, current) => (parseInt(prev.kp) > parseInt(current.kp)) ? prev : current);
+
+          if (mvp && parseInt(mvp.kp) > 0) {
+            mvpContainer.innerHTML = `
+              <div class="relative bg-gradient-to-r from-red-950 via-black to-black border border-red-500/50 p-4 sm:p-6 rounded-xl overflow-hidden flex items-center justify-between shadow-[0_0_30px_rgba(255,0,0,0.2)] group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-red-600 to-purple-900 blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+
+                <div class="relative flex items-center gap-4 sm:gap-6 z-10">
+                  <div class="w-14 h-14 sm:w-20 sm:h-20 bg-red-950 border-2 border-red-500 flex items-center justify-center rotate-45 shadow-[0_0_15px_rgba(255,0,0,0.5)]">
+                    <span class="font-title font-bold text-white text-lg sm:text-2xl -rotate-45">${mvp.logo}</span>
+                  </div>
+                  <div>
+                    <div class="text-red-500 font-mono text-xs sm:text-sm font-bold tracking-widest uppercase mb-1 flex items-center gap-2">
+                      <i data-lucide="flame" class="w-4 h-4 animate-pulse"></i> Top Fragger
+                    </div>
+                    <div class="font-title text-xl sm:text-3xl text-white uppercase tracking-wider">${mvp.team}</div>
+                  </div>
+                </div>
+
+                <div class="relative z-10 text-right pr-2">
+                  <div class="font-mono text-gray-400 text-[10px] sm:text-sm uppercase tracking-widest mb-1">Total Kills</div>
+                  <div class="font-title text-3xl sm:text-5xl text-red-500 drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]">${mvp.kp}</div>
+                </div>
+              </div>
+            `;
+            mvpContainer.classList.remove('hidden');
+          } else {
+            mvpContainer.classList.add('hidden');
+          }
+        }
+
+        let html = '';
+
+        // Calculate the Top Score to determine everyone's Power Level bar
+        const topScore = currentData.length > 0 ? parseInt(currentData[0].total) : 100;
+
+        currentData.forEach(team => {
+          let badgeStyle = 'bg-[#222] text-gray-400 border border-white/10';
+          if (team.rank === 1) badgeStyle = 'bg-gradient-to-br from-[#ffe53b] to-[#ff2525] text-white shadow-[0_0_10px_rgba(255,229,59,0.5)]';
+          else if (team.rank === 2) badgeStyle = 'bg-gradient-to-br from-[#d3d3d3] to-[#808080] text-white';
+          else if (team.rank === 3) badgeStyle = 'bg-gradient-to-br from-[#cd7f32] to-[#8b4513] text-white';
+
+          const powerPercentage = Math.max(5, Math.min(100, (parseInt(team.total) / topScore) * 100));
+
+          html += `
+            <div class="leaderboard-row flex flex-col border-b border-white/[0.03] overflow-hidden" onclick="toggleDomainExpansion(this)">
+
+              <div class="flex items-center px-4 md:px-6 py-3 sm:py-4 cursor-pointer relative z-10 bg-transparent">
+                <div class="w-12 sm:w-16 flex justify-center">
+                  <div class="w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center -skew-x-[15deg] ${badgeStyle}">
+                    <span class="skew-x-[15deg] font-title font-bold text-lg sm:text-xl">${team.rank}</span>
+                  </div>
+                </div>
+                <div class="flex-1 flex items-center gap-3 sm:gap-4 ml-2 min-w-0 pointer-events-none">
+                  <div class="w-10 h-10 border-l-2 border-b-2 border-[#ff7b00] bg-gradient-to-br from-black to-[#2a1300] flex items-center justify-center rounded-br-lg shrink-0">
+                    <span class="font-title font-bold text-[#ff7b00] text-xs sm:text-sm">${team.logo}</span>
+                  </div>
+                  <span class="font-bold text-base sm:text-xl tracking-wide text-gray-100 truncate uppercase">${team.team}</span>
+                </div>
+                <div class="w-16 sm:w-24 text-center font-bold text-[#ff9900] text-xl sm:text-2xl text-glow-orange font-mono pointer-events-none">${team.total}</div>
+              </div>
+
+              <div class="domain-expansion max-h-0 overflow-hidden transition-all duration-300 ease-in-out bg-black/60 backdrop-blur-md relative z-0">
+                <div class="p-4 border-t border-white/5 mx-4 md:mx-6 flex items-center gap-3 sm:gap-6 mb-2">
+
+                  <div class="flex-1 bg-[#111]/80 p-2 sm:p-3 rounded-lg border border-red-500/20 flex flex-col items-center justify-center shadow-[inset_0_0_10px_rgba(255,0,0,0.1)]">
+                    <span class="text-gray-500 font-mono text-[9px] sm:text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1"><i data-lucide="crosshair" class="w-3 h-3 text-red-500"></i> Kills</span>
+                    <span class="text-red-500 font-bold font-title text-lg sm:text-xl drop-shadow-[0_0_5px_rgba(255,0,0,0.8)]">${team.kp}</span>
+                  </div>
+
+                  <div class="flex-1 bg-[#111]/80 p-2 sm:p-3 rounded-lg border border-[#00ffcc]/20 flex flex-col items-center justify-center shadow-[inset_0_0_10px_rgba(0,255,204,0.1)]">
+                    <span class="text-gray-500 font-mono text-[9px] sm:text-[10px] uppercase tracking-widest mb-1 flex items-center gap-1"><i data-lucide="shield" class="w-3 h-3 text-[#00ffcc]"></i> Place</span>
+                    <span class="text-[#00ffcc] font-bold font-title text-lg sm:text-xl drop-shadow-[0_0_5px_rgba(0,255,204,0.8)]">${team.pp}</span>
+                  </div>
+
+                  <div class="flex-[1.5] flex flex-col justify-center gap-1">
+                    <span class="text-gray-500 font-mono text-[9px] uppercase tracking-widest text-right">Power Level</span>
+                    <div class="w-full h-1.5 sm:h-2 bg-[#222] rounded-full overflow-hidden shadow-[inset_0_0_5px_#000]">
+                      <div class="h-full bg-gradient-to-r from-[#ff7b00] to-red-600 transition-all duration-1000 ease-out" style="width: ${powerPercentage}%"></div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        leaderboardBody.innerHTML = html;
+
+        if (currentData.length >= 1) igniteElement(leaderboardBody.children[0], 1);
+        if (currentData.length >= 2) igniteElement(leaderboardBody.children[1], 2);
+        if (currentData.length >= 3) igniteElement(leaderboardBody.children[2], 3);
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+
+      // ==========================================
+      // ❄️ WINTERLANDS SNOW GENERATOR
+      // ==========================================
+      const canvas = document.getElementById('snow-canvas');
+      const ctx = canvas.getContext('2d');
+
+      let width = canvas.width = window.innerWidth;
+      let height = canvas.height = window.innerHeight;
+      let snowflakes = [];
+
+      const maxFlakes = window.innerWidth < 768 ? 50 : 150;
+
+      for (let i = 0; i < maxFlakes; i++) {
+        snowflakes.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: Math.random() * 2 + 0.5,
+          d: Math.random() * 1 + 0.5,
+          a: Math.random() * Math.PI * 2
+        });
+      }
+
+      function drawSnow() {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+        ctx.beginPath();
+        for (let i = 0; i < maxFlakes; i++) {
+          let f = snowflakes[i];
+          ctx.moveTo(f.x, f.y);
+          ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2, true);
+        }
+        ctx.fill();
+        updateSnow();
+      }
+
+      let angle = 0;
+      function updateSnow() {
+        angle += 0.01;
+        for (let i = 0; i < maxFlakes; i++) {
+          let f = snowflakes[i];
+
+          f.y += Math.cos(angle + f.d) + 1 + f.r / 2;
+          f.x += Math.sin(angle) * 1.5;
+
+          if (f.x > width + 5 || f.x < -5 || f.y > height) {
+            if (i % 3 > 0) {
+              snowflakes[i] = { x: Math.random() * width, y: -10, r: f.r, d: f.d, a: f.a };
+            } else {
+              if (Math.sin(angle) > 0) {
+                snowflakes[i] = { x: -5, y: Math.random() * height, r: f.r, d: f.d, a: f.a };
+              } else {
+                snowflakes[i] = { x: width + 5, y: Math.random() * height, r: f.r, d: f.d, a: f.a };
+              }
+            }
+          }
+        }
+      }
+
+      function loopSnow() {
+        drawSnow();
+        requestAnimationFrame(loopSnow);
+      }
+
+      window.addEventListener('resize', () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      });
+
+      loopSnow();
+
+      // ==========================================
+      // 📱 3D GYROSCOPE PARALLAX (THE COCKPIT)
+      // ==========================================
+      let initialBeta = null;
+      let initialGamma = null;
+
+      window.addEventListener('deviceorientation', (e) => {
+        if (!e.beta || !e.gamma) return;
+
+        if (initialBeta === null) initialBeta = e.beta;
+        if (initialGamma === null) initialGamma = e.gamma;
+
+        let x = e.gamma - initialGamma;
+        let y = e.beta - initialBeta;
+
+        x = Math.max(-25, Math.min(25, x));
+        y = Math.max(-25, Math.min(25, y));
+
+        const parallaxBg = document.getElementById('parallax-bg');
+        const parallaxBoard = document.getElementById('leaderboard');
+
+        if (parallaxBg) {
+          parallaxBg.style.transform = `scale(1.1) translate(${x * -0.6}px, ${y * -0.6}px)`;
+        }
+
+        if (parallaxBoard && window.innerWidth < 768) {
+          parallaxBoard.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
+        }
+      });
+
+      // ==========================================
+      // 🎵 EXPLICIT MUSIC PLAYER LOGIC
+      // ==========================================
+      const bgMusic = document.getElementById('bg-music');
+      const musicToggle = document.getElementById('music-toggle');
+      const iconPlay = document.getElementById('icon-play');
+      const iconPause = document.getElementById('icon-pause');
+      const musicText = document.getElementById('music-text');
+
+      bgMusic.volume = 0.3;
+
+      musicToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (navigator.vibrate) navigator.vibrate(20); // Haptic feedback
+
+        if (bgMusic.paused) {
+          bgMusic.play();
+          iconPlay.classList.add('hidden');
+          iconPause.classList.remove('hidden');
+          musicText.innerText = "Pause Theme";
+          musicToggle.classList.remove('bg-[#111]', 'text-[#ff7b00]', 'border-[#ff7b00]/50');
+          musicToggle.classList.add('bg-[#ff7b00]', 'text-black', 'border-transparent', 'shadow-[0_0_15px_rgba(255,123,0,0.5)]');
+        } else {
+          bgMusic.pause();
+          iconPlay.classList.remove('hidden');
+          iconPause.classList.add('hidden');
+          musicText.innerText = "Play Theme";
+          musicToggle.classList.remove('bg-[#ff7b00]', 'text-black', 'border-transparent', 'shadow-[0_0_15px_rgba(255,123,0,0.5)]');
+          musicToggle.classList.add('bg-[#111]', 'text-[#ff7b00]', 'border-[#ff7b00]/50');
+        }
+      });
+
+      // Init App
+      renderTabs();
+      fetchAndProcessData();
+      fetchAndRenderSchedule();
+    </script>
+  </body>
+</html>
